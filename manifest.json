@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "cheapseatsecon.themed-files",
+  "name": "Themed Files",
+  "version": "0.1.0",
+  "author": "cheapseatsecon",
+  "description": "Reskins GTK Files (Nautilus) and other libadwaita apps to match the current Omarchy shell theme. Visual only — no functionality changes.",
+  "kinds": ["service"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}
