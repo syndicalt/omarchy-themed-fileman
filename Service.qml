@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Commons
 
 // Reskins libadwaita apps (GTK Files among them) to match the current
 // Omarchy shell theme. Visual only — no functionality changes anywhere.
