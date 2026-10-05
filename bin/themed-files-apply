@@ -171,8 +171,15 @@ else
   mv "$tmp" "$GTK_CSS"
   chmod 644 "$GTK_CSS"
   if (( RESTART_NAUTILUS )); then
-    # Nautilus reads gtk.css at process start. pkill is enough: the dbus
-    # activation re-launches it on demand when the user next opens Files.
+    # Nautilus reads gtk.css at process start, so a running instance must be
+    # restarted to retheme. Graceful dbus quit closes windows cleanly (state
+    # saved, no kill signal); dbus re-activates nautilus on demand the next
+    # time the user opens Files.
+    gdbus call --session --dest org.gnome.Nautilus \
+      --object-path /org/gnome/Nautilus \
+      --method org.gtk.Actions.Activate "quit" "[]" '{}' >/dev/null 2>&1 || true
+    # Fallback for an unresponsive service.
+    sleep 0.5
     pkill -x nautilus 2>/dev/null || true
   fi
 fi
