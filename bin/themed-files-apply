@@ -64,7 +64,7 @@ if is_light; then
   card_fg=$foreground
   headerbar_bg=$background
   headerbar_fg=$foreground
-  headerbar_backdrop=$darker_background
+  headerbar_backdrop=$background
   secondary_sidebar_bg=$darker_background
   thumbnail_bg=$lighter_background
 else
@@ -84,7 +84,7 @@ else
   card_fg=$foreground
   headerbar_bg=$background
   headerbar_fg=$foreground
-  headerbar_backdrop=$darker_background
+  headerbar_backdrop=$background
   secondary_sidebar_bg=$background
   thumbnail_bg=$background
 fi
@@ -107,6 +107,10 @@ cat >"$tmp" <<EOF
 @define-color view_fg_color $view_fg;
 @define-color sidebar_bg_color $sidebar_bg;
 @define-color sidebar_fg_color $sidebar_fg;
+/* Keep the unfocused sidebar identical to focused: libadwaita otherwise
+ * swaps in its own gray backdrop color. */
+@define-color sidebar_backdrop_color $sidebar_bg;
+@define-color secondary_sidebar_backdrop_color $sidebar_bg;
 @define-color secondary_sidebar_bg_color $secondary_sidebar_bg;
 @define-color dialog_bg_color $dialog_bg;
 @define-color dialog_fg_color $dialog_fg;
@@ -136,6 +140,8 @@ cat >"$tmp" <<EOF
   --view-fg-color: $view_fg;
   --sidebar-bg-color: $sidebar_bg;
   --sidebar-fg-color: $sidebar_fg;
+  --sidebar-backdrop-color: $sidebar_bg;
+  --secondary-sidebar-backdrop-color: $sidebar_bg;
   --secondary-sidebar-bg-color: $secondary_sidebar_bg;
   --dialog-bg-color: $dialog_bg;
   --dialog-fg-color: $dialog_fg;
