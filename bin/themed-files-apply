@@ -70,20 +70,22 @@ if is_light; then
 else
   window_bg=$background
   window_fg=$foreground
-  view_bg=$darker_background
+  # Match the shell's menu/launcher surfaces: one flat background everywhere,
+  # with lighter_background reserved for hover/selection fills.
+  view_bg=$background
   view_fg=$foreground
-  sidebar_bg=$darker_background
+  sidebar_bg=$background
   sidebar_fg=$foreground
-  dialog_bg=$lighter_background
+  dialog_bg=$background
   dialog_fg=$foreground
-  popover_bg=$lighter_background
+  popover_bg=$background
   popover_fg=$foreground
-  card_bg=$lighter_background
+  card_bg=$background
   card_fg=$foreground
   headerbar_bg=$background
   headerbar_fg=$foreground
   headerbar_backdrop=$darker_background
-  secondary_sidebar_bg=$darker_background
+  secondary_sidebar_bg=$background
   thumbnail_bg=$background
 fi
 
@@ -118,7 +120,8 @@ cat >"$tmp" <<EOF
 @define-color headerbar_backdrop_color $headerbar_backdrop;
 @define-color border_color $muted;
 
-/* Selection: theme selection background, theme foreground text. */
+/* Selection: theme selection background (launcher-row equivalent), theme
+ * foreground text. */
 @define-color theme_selected_bg_color $selection;
 @define-color theme_selected_fg_color $selection_fg;
 
