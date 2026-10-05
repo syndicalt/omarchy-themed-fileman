@@ -2,7 +2,7 @@
 #
 # themed-files-apply - restyle libadwaita apps to match the current Omarchy theme.
 #
-#   themed-files-apply [--restart-nautilus]
+#   themed-files-apply
 #
 # Reads the current Omarchy palette from
 # ~/.local/state/omarchy/current/theme/colors.toml (via omarchy-theme-color,
@@ -12,14 +12,18 @@
 
 set -euo pipefail
 
-RESTART_NAUTILUS=0
-[[ ${1:-} == "--restart-nautilus" ]] && RESTART_NAUTILUS=1
-
 COLORS_FILE="$HOME/.local/state/omarchy/current/theme/colors.toml"
 GTK_CSS="$HOME/.config/gtk-4.0/gtk.css"
+NAUTILUS_NAME="org.gnome.Nautilus"
 
 color() {
   omarchy-theme-color --file "$COLORS_FILE" "$1" 2>/dev/null || true
+}
+
+nautilus_running() {
+  gdbus call --session --dest org.freedesktop.DBus \
+    --object-path /org/freedesktop/DBus \
+    --method org.freedesktop.DBus.NameHasOwner "$NAUTILUS_NAME" 2>/dev/null | grep -q true
 }
 
 accent=$(color accent)
@@ -35,7 +39,7 @@ mode=$(color mode)
 # Sane dark fallbacks if the theme file is missing or unreadable.
 : "${accent:=#cacccc}"
 : "${background:=#101315}"
-: "${darker_background:=$(printf '%s' "$background" | sed 's/[0-9a-fA-F]\{2\}$/&/;t;s/.*/#0c0f11/')}"
+: "${darker_background:=#0c0f11}"
 : "${lighter_background:=$(printf '%s' "$background" | sed 's/.*/#1a2024/')}"
 : "${foreground:=#cacccc}"
 : "${muted:=#707880}"
@@ -166,20 +170,34 @@ EOF
 mkdir -p "$(dirname "$GTK_CSS")"
 # Atomic replace so a concurrent app start never reads a half-written file.
 if [[ -f $GTK_CSS ]] && cmp -s "$tmp" "$GTK_CSS"; then
-  : # unchanged; skip rewrite and any restart below
+  : # unchanged; skip rewrite
 else
   mv "$tmp" "$GTK_CSS"
   chmod 644 "$GTK_CSS"
-  if (( RESTART_NAUTILUS )); then
-    # Nautilus reads gtk.css at process start, so a running instance must be
-    # restarted to retheme. Graceful dbus quit closes windows cleanly (state
-    # saved, no kill signal); dbus re-activates nautilus on demand the next
-    # time the user opens Files.
-    gdbus call --session --dest org.gnome.Nautilus \
-      --object-path /org/gnome/Nautilus \
-      --method org.gtk.Actions.Activate "quit" "[]" '{}' >/dev/null 2>&1 || true
-    # Fallback for an unresponsive service.
-    sleep 0.5
-    pkill -x nautilus 2>/dev/null || true
+  if nautilus_running; then
+    nautilus --quit >/dev/null 2>&1 || true
+
+    for _ in {1..100}; do
+      if ! nautilus_running; then
+        break
+      fi
+      sleep 0.1
+    done
+
+    if nautilus_running; then
+      printf 'Nautilus did not exit after the graceful quit request; not launching a second instance.\n' >&2
+      exit 1
+    fi
+
+    omarchy launch nautilus >/dev/null 2>&1 &
+    for _ in {1..100}; do
+      if nautilus_running; then
+        exit 0
+      fi
+      sleep 0.1
+    done
+
+    printf 'Nautilus did not start after the theme update.\n' >&2
+    exit 1
   fi
 fi

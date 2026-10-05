@@ -11,9 +11,8 @@ import qs.Commons
 //   1. reads the Omarchy palette from the current theme's colors.toml
 //   2. writes ~/.config/gtk-4.0/gtk.css overriding libadwaita named colors
 //
-// Running apps are never interrupted: they pick up the new CSS the next
-// time they launch. (bin/themed-files-apply --restart-nautilus forces an
-// immediate clean dbus re-theme if ever wanted.)
+// After a CSS change, the apply script gracefully quits and relaunches
+// Nautilus so Files loads the new stylesheet. Other GTK apps update on launch.
 //
 // Theme detection: omarchy-theme-set swaps the whole current/theme directory
 // (rm -rf + mv), which can defeat inode-based file watches, so detection is
@@ -35,6 +34,7 @@ Item {
 
   property string lastThemeName: ""
   property bool started: false
+  property bool applyPending: false
 
   // One-shot deferred so a shell restart doesn't race nautilus startup.
   Timer {
@@ -87,11 +87,18 @@ Item {
       if (exitCode !== 0) {
         console.warn("omarchy-themed-files: apply failed (" + exitCode + "): " + String(applyStderr.text || "").trim())
       }
+      if (root.applyPending) {
+        root.applyPending = false
+        root.apply("queued-theme-change")
+      }
     }
   }
 
   function apply(reason) {
-    if (applyProc.running) return
+    if (applyProc.running) {
+      applyPending = true
+      return
+    }
     console.log("omarchy-themed-files: applying theme css (" + reason + ")")
     applyProc.command = [root.scriptPath]
     applyProc.running = true
