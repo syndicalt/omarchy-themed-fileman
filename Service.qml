@@ -7,10 +7,13 @@ import qs.Commons
 // Omarchy shell theme. Visual only — no functionality changes anywhere.
 //
 // On startup and on every theme change this service runs
-// bin/themed-files-apply --restart-nautilus, which:
+// bin/themed-files-apply, which:
 //   1. reads the Omarchy palette from the current theme's colors.toml
 //   2. writes ~/.config/gtk-4.0/gtk.css overriding libadwaita named colors
-//   3. restarts nautilus if it is running (dbus re-activates it on demand)
+//
+// Running apps are never interrupted: they pick up the new CSS the next
+// time they launch. (bin/themed-files-apply --restart-nautilus forces an
+// immediate clean dbus re-theme if ever wanted.)
 //
 // Theme detection: omarchy-theme-set swaps the whole current/theme directory
 // (rm -rf + mv), which can defeat inode-based file watches, so detection is
@@ -90,7 +93,7 @@ Item {
   function apply(reason) {
     if (applyProc.running) return
     console.log("omarchy-themed-files: applying theme css (" + reason + ")")
-    applyProc.command = [root.scriptPath, "--restart-nautilus"]
+    applyProc.command = [root.scriptPath]
     applyProc.running = true
   }
 

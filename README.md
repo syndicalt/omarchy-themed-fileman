@@ -1,4 +1,4 @@
-# omarchy-themed-files
+# Omarchy Themed File Manager
 
 An [Omarchy](https://omarchy.org/) shell plugin that reskins GTK Files
 (Nautilus) — and other libadwaita apps — to match the current Omarchy shell
@@ -13,9 +13,10 @@ On startup and on every Omarchy theme change the plugin:
 2. Writes `~/.config/gtk-4.0/gtk.css`, overriding libadwaita's named colors
    (`@define-color` + `:root` CSS variables): window, view, sidebar, dialog,
    popover, card, headerbar, thumbnail, border, and accent roles.
-3. Restarts Nautilus if it is running (`pkill`; dbus re-activates it on
-   demand the next time Files is opened). Other GTK4 apps pick the new CSS up
-   the next time they launch.
+3. Never interrupts running apps: a running Nautilus keeps its current theme
+   and picks up the new CSS the next time it (or any other GTK4 app) is
+   launched. The `--restart-nautilus` flag on the apply script forces an
+   immediate clean dbus re-theme if you ever want it.
 
 ## Scope
 
@@ -63,4 +64,4 @@ omarchy plugin remove cheapseatsecon.themed-files
 |------|---------|
 | `manifest.json` | Plugin manifest (`service` kind, `keepLoaded`) |
 | `Service.qml` | Watches theme changes, runs the apply script |
-| `bin/themed-files-apply` | Generates `gtk.css` from the Omarchy palette, restarts Nautilus |
+| `bin/themed-files-apply` | Generates `gtk.css` from the Omarchy palette |
